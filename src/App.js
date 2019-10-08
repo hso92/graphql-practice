@@ -39,8 +39,11 @@ function App() {
           if (loading) return "Loading...";
           if (error) return `Error! ${error.message}`;
 
-          console.log({ data });
-          return <div></div>;
+          const search = data.search
+          const repositoryCount = search.repositoryCount
+          const repositoryUnit = repositoryCount === 1 ? 'Repository' : 'Repositories'
+          const title = `Github Repositories Search Results - ${repositoryCount} ${repositoryUnit}`;
+          return <h2>{title}</h2>
         }}
       </Query>
     </ApolloProvider>
