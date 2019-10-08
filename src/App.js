@@ -4,10 +4,12 @@ import { Query } from "react-apollo";
 import client from "./client";
 import { SEARCH_REPOSITRIES } from "./graphql";
 
+const PER_PAGE = 5
+
 const DEFAULT_STATE = {
   after: null,
   before: null,
-  first: 5,
+  first: PER_PAGE,
   last: null,
   query: "フロントエンドエンジニア"
 };
@@ -24,6 +26,15 @@ function App() {
   };
   const handleSubmit = event => {
     event.preventDefault();
+  }
+  const goNext = (search) => {
+    setValroables({
+      ...DEFAULT_STATE,
+      first: PER_PAGE,
+      after: search.pageInfo.endCursor,
+      last: null,
+      before: null
+    });
   }
   console.log({ query });
   return (
@@ -64,6 +75,13 @@ function App() {
                   })
                 }
               </ul>
+              {search.pageInfo.hasNextPage ?
+                <button
+                  onClick={() => goNext(search)}
+                >next</button>
+                :
+                null
+               }
             </>
           )
 
