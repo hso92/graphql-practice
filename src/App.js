@@ -36,6 +36,15 @@ function App() {
       before: null
     });
   }
+  const goPrevious = (search) => {
+    setValroables({
+      ...DEFAULT_STATE,
+      last: PER_PAGE,
+      before: search.pageInfo.startCursor,
+      after: null,
+      first: null,
+    });
+  }
   console.log({ query });
   return (
     <ApolloProvider client={client}>
@@ -58,32 +67,29 @@ function App() {
             <>
               <h2>{title}</h2>
               <ul>
-                {
-                  search.edges.map(edge => {
-                    const node = edge.node
-                    return (
-                      <li key={node.id}>
-                        <a
-                          href={node.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {node.name}
-                        </a>
-                      </li>
-                    );
-                  })
-                }
+                {search.edges.map(edge => {
+                  const node = edge.node;
+                  return (
+                    <li key={node.id}>
+                      <a
+                        href={node.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {node.name}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
-              {search.pageInfo.hasNextPage ?
-                <button
-                  onClick={() => goNext(search)}
-                >next</button>
-                :
-                null
-               }
+              {search.pageInfo.hasPreviousPage ? (
+                <button onClick={() => goPrevious(search)}>Previous</button>
+              ) : null}
+              {search.pageInfo.hasNextPage ? (
+                <button onClick={() => goNext(search)}>next</button>
+              ) : null}
             </>
-          )
+          );
 
         }}
       </Query>
