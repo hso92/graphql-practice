@@ -1,22 +1,32 @@
 import React from "react";
-import { ApolloProvider } from "react-apollo";
-import { Query } from "react-apollo";
+import { ApolloProvider, Mutation, Query } from "react-apollo";
 import client from "./client";
-import { SEARCH_REPOSITRIES } from "./graphql";
+import { ADD_STAR, SEARCH_REPOSITRIES } from "./graphql";
 
 const StarButton = props => {
   const node = props.node;
   const totalCount = node.stargazers.totalCount;
   const viewerHasStarred = node.viewerHasStarred;
-  const starCount = totalCount === 1 ? "1 star" : `${totalCount} stars`
-  return (
-    <button>
-      {starCount} | {viewerHasStarred ? 'starred' : '-'}
+  const starCount = totalCount === 1 ? "1 star" : `${totalCount} stars`;
+  const StarStatus = ({ addStar }) => (
+    <button
+      onClick={() =>
+        addStar({
+          variables: { input: { starrableId: node.id } }
+        })
+      }
+    >
+      {starCount} | {viewerHasStarred ? "starred" : "-"}
     </button>
-  )
-}
+  );
+  return (
+    <Mutation mutation={ADD_STAR}>
+      {addStar => <StarStatus addStar={addStar} />}
+    </Mutation>
+  );
+};
 
-const PER_PAGE = 5
+const PER_PAGE = 5;
 const DEFAULT_STATE = {
   after: null,
   before: null,
@@ -37,8 +47,8 @@ function App() {
   };
   const handleSubmit = event => {
     event.preventDefault();
-  }
-  const goNext = (search) => {
+  };
+  const goNext = search => {
     setValroables({
       ...DEFAULT_STATE,
       first: PER_PAGE,
@@ -46,16 +56,16 @@ function App() {
       last: null,
       before: null
     });
-  }
-  const goPrevious = (search) => {
+  };
+  const goPrevious = search => {
     setValroables({
       ...DEFAULT_STATE,
       last: PER_PAGE,
       before: search.pageInfo.startCursor,
       after: null,
-      first: null,
+      first: null
     });
-  }
+  };
   return (
     <ApolloProvider client={client}>
       <form onSubmit={e => handleSubmit(e)}>
@@ -69,9 +79,10 @@ function App() {
           if (loading) return "Loading...";
           if (error) return `Error! ${error.message}`;
 
-          const search = data.search
-          const repositoryCount = search.repositoryCount
-          const repositoryUnit = repositoryCount === 1 ? 'Repository' : 'Repositories'
+          const search = data.search;
+          const repositoryCount = search.repositoryCount;
+          const repositoryUnit =
+            repositoryCount === 1 ? "Repository" : "Repositories";
           const title = `Github Repositories Search Results - ${repositoryCount} ${repositoryUnit}`;
           return (
             <>
@@ -89,7 +100,7 @@ function App() {
                         {node.name}
                       </a>
                       &nbsp;
-                      <StarButton node={node}/>
+                      <StarButton node={node} />
                     </li>
                   );
                 })}
@@ -102,7 +113,6 @@ function App() {
               ) : null}
             </>
           );
-
         }}
       </Query>
     </ApolloProvider>
