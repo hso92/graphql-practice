@@ -4,7 +4,8 @@ import client from "./client";
 import { ADD_STAR, REMOVE_STAR, SEARCH_REPOSITRIES } from "./graphql";
 
 const StarButton = props => {
-  const { node, after, before, first, last, query } = props;
+  const { node } = props;
+  const { after, before, first, last, query } = DEFAULT_STATE;
   const totalCount = node.stargazers.totalCount;
   const viewerHasStarred = node.viewerHasStarred;
   const starCount = totalCount === 1 ? "1 star" : `${totalCount} stars`;
@@ -12,7 +13,27 @@ const StarButton = props => {
     <button
       onClick={() =>
         addOrRemoveStar({
-          variables: { input: { starrableId: node.id } }
+          variables: { input: { starrableId: node.id } },
+          update: (store , {data:{ addStar, removeStar}}) => {
+            const {starrable} = addStar || removeStar;
+            console.log(starrable)
+            const data = store.readQuery({
+              query: SEARCH_REPOSITRIES,
+              variables: { after, before, first, last, query }
+            });
+            const edges = data.search.edges;
+            const newEdges = edges.map(edge => {
+              if (edge.node.id === node.id) {
+                const totalCount = edge.node.stargazers.totalCount;
+                const diff = starrable.viewerHasStarred ? 1 : -1;
+                const newTotalCount = totalCount + diff;
+                edge.node.stargazers.totalCount = newTotalCount;
+              }
+              return edge
+            });
+            data.search.edges = newEdges
+            store.writeQuery({query: SEARCH_REPOSITRIES, data})
+          }
         })
       }
     >
@@ -20,18 +41,7 @@ const StarButton = props => {
     </button>
   );
   return (
-    <Mutation
-      mutation={viewerHasStarred ? REMOVE_STAR : ADD_STAR}
-      refetchQueries={mutationResult => {
-        console.log(mutationResult)
-        return [
-          {
-            query: SEARCH_REPOSITRIES,
-            variables: { after, before, first, last, query }
-          }
-        ];
-      }}
-    >
+    <Mutation mutation={viewerHasStarred ? REMOVE_STAR : ADD_STAR}>
       {addOrRemoveStar => <StarStatus addOrRemoveStar={addOrRemoveStar} />}
     </Mutation>
   );
